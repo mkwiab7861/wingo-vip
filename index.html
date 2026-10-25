@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WinGo 30S VIP Signal & Free Move Box</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
+
+        :root {
+            --bg-deep: #030712;
+            --card-glass: rgba(13, 18, 36, 0.97);
+            --accent-cyan: #00f2fe;
+            --accent-green: #10b981;
+            --accent-red: #ff3366;
+            --gold: #ffb703;
+            --skip-orange: #f97316;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background-color: var(--bg-deep); }
+
+        /* 🌐 پس منظر میں پلیٹ فارم فریم */
+        .platform-background {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; z-index: 1;
+        }
+
+        /* 🟢 چمکدار گول VIP لوگو */
+        .stealth-bubble {
+            position: fixed; top: 15px; right: 15px; width: 65px; height: 65px;
+            background: radial-gradient(circle, #10b981 0%, #030712 80%);
+            border-radius: 50%; overflow: hidden; cursor: pointer; z-index: 99999;
+            box-shadow: 0 0 25px rgba(0,242,254,0.9), 0 0 15px rgba(255,183,3,0.9);
+            border: 2.5px solid var(--gold);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            animation: superGlow 1.5s infinite alternate;
+            transition: transform 0.2s;
+        }
+        .logo-inner-text { font-size: 14px; font-weight: 900; color: var(--gold); text-shadow: 0 0 5px rgba(0,0,0,0.8); }
+        .logo-sub-text { font-size: 8px; font-weight: 800; color: #fff; background: rgba(0,242,254,0.3); padding: 1px 4px; border-radius: 4px; margin-top: 2px; }
+        .stealth-bubble:active { transform: scale(0.9); }
+
+        @keyframes superGlow {
+            0% { box-shadow: 0 0 15px rgba(0,242,254,0.6), 0 0 10px rgba(255,183,3,0.5); }
+            100% { box-shadow: 0 0 35px rgba(255,51,102,0.9), 0 0 25px rgba(255,183,3,0.9); }
+        }
+
+        /* 🔒 پاسورڈ موڈل */
+        #authModal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 7, 18, 0.85); backdrop-filter: blur(15px);
+            display: none; justify-content: center; align-items: center; z-index: 99999;
+        }
+        .auth-card {
+            background: var(--card-glass); border: 2px solid var(--accent-cyan);
+            padding: 24px; border-radius: 20px; text-align: center; width: 280px;
+            box-shadow: 0 0 30px rgba(0,242,254,0.4);
+        }
+        .auth-input {
+            width: 100%; padding: 10px; margin: 12px 0; background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #fff;
+            text-align: center; font-size: 16px; font-weight: bold;
+        }
+        .auth-btn {
+            width: 100%; padding: 10px; background: linear-gradient(135deg, #00f2fe, #9d4edd);
+            border: none; border-radius: 8px; color: #fff; font-weight: 900; cursor: pointer;
+        }
+
+        /* 📦 باکس (جس کو کہیں سے بھی پکڑ کر موو کیا جا سکتا ہے) */
+        .predictor-box {
+            position: fixed; top: 20px; right: 20px; width: 250px; height: 260px;
+            background: var(--card-glass); backdrop-filter: blur(25px); border-radius: 16px;
+            padding: 8px; border: 2px solid var(--accent-cyan);
+            box-shadow: 0 10px 40px rgba(0, 242, 254, 0.4); z-index: 10000;
+            overflow: hidden; display: none; transition: width 0.3s, height 0.3s;
+            cursor: grab; /* بتانے کے لیے کہ یہ موو ہو سکتا ہے */
+        }
+        .predictor-box:active { cursor: grabbing; }
+
+        .box-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15); padding-bottom: 3px;
+        }
+        .box-title { font-size: 7.5px; color: var(--gold); font-weight: 800; text-transform: uppercase; }
+        
+        .header-btns { display: flex; gap: 3px; }
+        .control-btn { background: rgba(255,255,255,0.1); color: #fff; border: none; font-size: 7.5px; padding: 1px 5px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .close-btn { background: rgba(255,51,102,0.3); color: var(--accent-red); }
+
+        .clean-screen {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(3, 7, 18, 0.99));
+            border-radius: 10px; padding: 6px; text-align: center; margin-bottom: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .pred-label { font-size: 7px; color: var(--text-sub); font-weight: 800; }
+        .pred-trend { 
+            font-size: 22px; font-weight: 900; margin: 2px 0; color: #fff; 
+            text-shadow: 0 0 15px rgba(0, 242, 254, 0.7); letter-spacing: 1px;
+        }
+        .pred-trend.skip-text { color: var(--skip-orange); text-shadow: 0 0 15px rgba(249, 115, 22, 0.7); }
+        
+        .sub-text { font-size: 6.5px; color: var(--accent-cyan); font-weight: 800; margin-top: 1px; }
+
+        .period-info {
+            display: flex; justify-content: space-between; font-size: 7px; color: var(--text-sub);
+            background: rgba(3, 7, 18, 0.6); padding: 3px 5px; border-radius: 5px; margin-bottom: 4px;
+        }
+
+        /* 📜 ہسٹری ٹیبل سیکشن */
+        .history-container {
+            background: rgba(3, 7, 18, 0.85); border-radius: 8px; padding: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.15); height: 95px; overflow-y: auto;
+        }
+        .history-table { width: 100%; border-collapse: collapse; font-size: 6.5px; text-align: center; }
+        .history-table th { color: var(--text-sub); padding: 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); position: sticky; top: 0; background: #030712; }
+        .history-table td { padding: 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: #fff; }
+
+        .badge-win { background: rgba(16, 185, 129, 0.25); color: var(--accent-green); padding: 1px 3px; border-radius: 2px; font-weight: 800; }
+        .badge-loss { background: rgba(255, 51, 102, 0.25); color: var(--accent-red); padding: 1px 3px; border-radius: 2px; font-weight: 800; }
+        .badge-skip { background: rgba(249, 115, 22, 0.25); color: var(--skip-orange); padding: 1px 3px; border-radius: 2px; font-weight: 800; }
+
+        /* 🎉 ٹرانسپرنٹ وننگ پاپ اپ */
+        #winPopup {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            background: rgba(16, 185, 129, 0.25); backdrop-filter: blur(8px);
+            border: 2px solid rgba(16, 185, 129, 0.8);
+            padding: 22px 35px; border-radius: 24px; text-align: center; z-index: 99999;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.4); 
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: none;
+        }
+        #winPopup.show { transform: translate(-50%, -50%) scale(1); display: block; }
+    </style>
+</head>
+<body>
+
+    <!-- 🎉 ٹرانسپرنٹ وننگ پاپ اپ -->
+    <div id="winPopup">
+        <div style="font-size: 42px; margin-bottom: 4px; text-shadow: 0 0 15px rgba(255,255,255,0.8);">🎉🏆🔥</div>
+        <div style="font-size: 15px; font-weight: 900; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.8);" id="winPopupText">WON AT STAGE 1!</div>
+    </div>
+
+    <!-- 🌐 پس منظر پلیٹ فارم -->
+    <iframe class="platform-background" src="https://92blaze22.com/register?inviteCode=D59QEYN&from=web" title="Platform"></iframe>
+
+    <!-- 🟢 چمکدار گول VIP لوگو -->
+    <div class="stealth-bubble" id="stealthBubble" onclick="handleBubbleClick()">
+        <div class="logo-inner-text">VIP</div>
+        <div class="logo-sub-text">OPEN</div>
+    </div>
+
+    <!-- 🔒 پاسورڈ موڈل -->
+    <div id="authModal">
+        <div class="auth-card">
+            <h3 style="color:var(--gold); font-size:13px; margin-bottom:6px;">VIP ACCESS LOCKED</h3>
+            <p style="font-size:8.5px; color:var(--text-sub); margin-bottom:10px;">Enter password to open signal box</p>
+            <input type="password" id="passInput" class="auth-input" placeholder="Password">
+            <div style="display: flex; gap: 6px;">
+                <button class="auth-btn" onclick="checkPassword()">UNLOCK</button>
+                <button class="auth-btn" style="background:rgba(255,255,255,0.1);" onclick="closeAuthModal()">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📦 سمارٹ اور اسان باکس (کہیں سے بھی ڈریگ ہونے والا) -->
+    <div class="predictor-box" id="predictorBox">
+        <div class="box-header">
+            <div class="box-title">WIN-GO 30S VIP SIGNAL</div>
+            <div class="header-btns">
+                <button class="control-btn" onclick="toggleBoxSize()" title="Resize">🔲</button>
+                <button class="control-btn" onclick="toggleBox()">➖</button>
+                <button class="control-btn close-btn" onclick="closeBox()">❌</button>
+            </div>
+        </div>
+
+        <div class="clean-screen">
+            <div class="pred-label">LIVE SIGNAL</div>
+            <div class="pred-trend" id="predTrend">ANALYZING</div>
+            <div class="sub-text">Follow 8 Stage You Will Never Loss</div>
+        </div>
+
+        <div class="period-info">
+            <div>PER: <span id="targetPeriod" style="color:var(--gold)">----</span></div>
+            <div>TIME: <span id="timerClock" style="color:var(--accent-green)">00:30</span></div>
+        </div>
+
+        <!-- 📜 ہسٹری ٹیبل -->
+        <div class="history-container">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>PER</th>
+                        <th>ACT</th>
+                        <th>PRED</th>
+                        <th>STS</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody">
+                    <tr><td colspan="4" style="color:var(--text-sub);">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<script>
+    let isUnlocked = false;
+    let boxSizes = [
+        { w: '250px', h: '260px' }, 
+        { w: '180px', h: '160px' }, 
+        { w: '300px', h: '350px' }  
+    ];
+    let currentSizeIndex = 0;
+
+    function toggleBoxSize() {
+        currentSizeIndex = (currentSizeIndex + 1) % boxSizes.length;
+        const box = document.getElementById('predictorBox');
+        box.style.width = boxSizes[currentSizeIndex].w;
+        box.style.height = boxSizes[currentSizeIndex].h;
+    }
+
+    function handleBubbleClick() {
+        if (isUnlocked) {
+            toggleBox();
+        } else {
+            document.getElementById('authModal').style.display = 'flex';
+        }
+    }
+
+    function closeAuthModal() {
+        document.getElementById('authModal').style.display = 'none';
+    }
+
+    function checkPassword() {
+        const val = document.getElementById('passInput').value;
+        if (val === "Ak334466") {
+            isUnlocked = true;
+            document.getElementById('authModal').style.display = 'none';
+            document.getElementById('stealthBubble').style.display = 'none';
+            document.getElementById('predictorBox').style.display = 'block';
+            startTimerEngine();
+            runLiveEngine();
+        } else {
+            alert("غلط پاسورڈ! دوبارہ کوشش کریں۔");
+        }
+    }
+
+    const WINGO_30S_API = "https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json";
+    let skipCounter = 0; 
+    let lastProcessedIssue = "";
+    let historyLogs = [];
+    let currentStage = 1;
+    let currentPrediction = "BIG";
+
+    function toggleBox() {
+        const box = document.getElementById('predictorBox');
+        const bubble = document.getElementById('stealthBubble');
+        if (box.style.display === 'block') {
+            box.style.display = 'none';
+            bubble.style.display = 'flex';
+        } else {
+            box.style.display = 'block';
+            bubble.style.display = 'none';
+        }
+    }
+
+    function closeBox() {
+        document.getElementById('predictorBox').style.display = 'none';
+        document.getElementById('stealthBubble').style.display = 'flex';
+    }
+
+    function startTimerEngine() {
+        setInterval(() => {
+            const remSec = 30 - (new Date().getSeconds() % 30);
+            document.getElementById('timerClock').innerText = `00:${remSec < 10 ? '0' : ''}${remSec}`;
+            if (remSec === 29 || remSec === 1) runLiveEngine();
+        }, 1000);
+    }
+
+    async function fetchDirectData() {
+        try {
+            const res = await fetch(WINGO_30S_API);
+            if (res.ok) {
+                const json = await res.json();
+                return json.data?.list || json.list || [];
+            }
+        } catch (e) {}
+        return null;
+    }
+
+    function runAdvancedAIs(list) {
+        if (!list || list.length === 0) return ["--", "--", "--", "--"];
+
+        const sizes = list.map(i => {
+            let num = parseInt(i.number !== undefined ? i.number : i.num);
+            return isNaN(num) ? "BIG" : (num >= 5 ? "BIG" : "SMALL");
+        });
+
+        let ai1 = sizes[0];
+        for (let i = 0; i < sizes.length - 1; i++) {
+            if (sizes[i] === sizes[0]) {
+                ai1 = sizes[i + 1] || sizes[0];
+                break;
+            }
+        }
+
+        let recentBlock = sizes.slice(0, 4);
+        let bigInBlock = recentBlock.filter(s => s === "BIG").length;
+        let ai2 = (bigInBlock >= 3 || bigInBlock === 0) ? (sizes[0] === "BIG" ? "SMALL" : "BIG") : sizes[0];
+
+        let ai3 = (sizes[0] === sizes[1] && sizes[1] === sizes[2]) ? sizes[0] : (sizes[0] === "BIG" ? "SMALL" : "BIG");
+
+        let totalBig = sizes.filter(s => s === "BIG").length;
+        let ai4 = (totalBig > sizes.length / 2) ? "SMALL" : "BIG";
+
+        return [ai1, ai2, ai3, ai4];
+    }
+
+    function masterSupervisorEvaluation(list) {
+        if (!list || list.length < 10) return { decision: "BIG" };
+
+        const trendAIs = runAdvancedAIs(list);
+
+        if (skipCounter > 0) {
+            skipCounter--;
+            return { decision: "SKIP ⏸️" };
+        }
+
+        let votes = { "BIG": 0, "SMALL": 0 };
+        trendAIs.forEach(val => { if (votes[val] !== undefined) votes[val]++; });
+
+        let finalDecision = "";
+        if (votes["BIG"] >= 3) {
+            finalDecision = "BIG";
+        } else if (votes["SMALL"] >= 3) {
+            finalDecision = "SMALL";
+        } else {
+            skipCounter = 1;
+            return { decision: "SKIP ⏸️" };
+        }
+
+        return { decision: finalDecision };
+    }
+
+    async function runLiveEngine() {
+        const list = await fetchDirectData();
+        if (!list || list.length === 0) return;
+
+        const latest = list[0];
+        let lastNum = parseInt(latest.number !== undefined ? latest.number : latest.num);
+        if (isNaN(lastNum)) lastNum = 0;
+
+        const latestIssue = String(latest.issueNumber ?? latest.issue ?? "");
+        const actualSize = lastNum >= 5 ? "BIG" : "SMALL";
+
+        if (latestIssue !== lastProcessedIssue && latestIssue !== "") {
+            if (lastProcessedIssue !== "") {
+                let status = "SKIPPED";
+                if (!currentPrediction.includes("SKIP")) {
+                    if (actualSize === currentPrediction) {
+                        status = "WIN";
+                        showWinPopup(currentStage);
+                        currentStage = 1;
+                        skipCounter = 0;
+                    } else {
+                        status = "LOSS";
+                        currentStage++;
+                        if (currentStage > 8) currentStage = 8;
+                        skipCounter = 1;
+                    }
+                }
+
+                historyLogs.unshift({
+                    issue: latestIssue.slice(-4),
+                    actual: `${lastNum}(${actualSize[0]})`,
+                    pred: currentPrediction.includes("SKIP") ? "SKIP" : currentPrediction[0],
+                    status: status
+                });
+
+                if (historyLogs.length > 25) historyLogs.pop();
+
+                document.getElementById('historyBody').innerHTML = historyLogs.map(item => {
+                    let bCls = item.status === 'WIN' ? 'badge-win' : (item.status === 'LOSS' ? 'badge-loss' : 'badge-skip');
+                    return `
+                    <tr>
+                        <td>${item.issue}</td>
+                        <td><b>${item.actual}</b></td>
+                        <td><b>${item.pred}</b></td>
+                        <td><span class="${bCls}">${item.status}</span></td>
+                    </tr>
+                    `;
+                }).join('');
+            }
+
+            lastProcessedIssue = latestIssue;
+
+            try {
+                const nextPeriod = (BigInt(latestIssue) + 1n).toString();
+                document.getElementById('targetPeriod').innerText = nextPeriod.slice(-4);
+            } catch(e) { 
+                document.getElementById('targetPeriod').innerText = "NEXT"; 
+            }
+
+            const evalResult = masterSupervisorEvaluation(list);
+            currentPrediction = evalResult.decision;
+
+            const predElem = document.getElementById('predTrend');
+            predElem.innerText = currentPrediction;
+
+            if (currentPrediction.includes("SKIP")) {
+                predElem.classList.add('skip-text');
+            } else {
+                predElem.classList.remove('skip-text');
+            }
+        }
+    }
+
+    function showWinPopup(stageNum) {
+        const popup = document.getElementById('winPopup');
+        document.getElementById('winPopupText').innerHTML = `🎉 WON AT STAGE ${stageNum}! 🎉`;
+        popup.classList.add('show');
+        setTimeout(() => {
+            popup.classList.remove('show');
+        }, 3500);
+    }
+
+    /* 🖱️ پورے باکس کو کہیں سے بھی ڈریگ کرنے کا فنکشن */
+    const box = document.getElementById('predictorBox');
+    let isDragging = false, startX, startY, initialX, initialY;
+
+    box.addEventListener('mousedown', dragStart);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', dragEnd);
+
+    box.addEventListener('touchstart', dragStart, {passive: true});
+    document.addEventListener('touchmove', drag, {passive: true});
+    document.addEventListener('touchend', dragEnd);
+
+    function dragStart(e) {
+        // اگر کلک بٹن یا ٹیبل پر ہو تو ڈریگ نہ ہو تاکہ بٹن اور سکرولنگ خراب نہ ہوں
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'TD' || e.target.tagName === 'TH') return;
+        isDragging = true;
+        startX = e.clientX || e.touches[0].clientX;
+        startY = e.clientY || e.touches[0].clientY;
+        initialX = box.offsetLeft;
+        initialY = box.offsetTop;
+    }
+
+    function drag(e) {
+        if (!isDragging) return;
+        let clientX = e.clientX || (e.touches ? e.touches[0].clientX : startX);
+        let clientY = e.clientY || (e.touches ? e.touches[0].clientY : startY);
+        let currentX = clientX - startX;
+        let currentY = clientY - startY;
+        box.style.left = `${initialX + currentX}px`;
+        box.style.top = `${initialY + currentY}px`;
+        box.style.right = 'auto';
+    }
+
+    function dragEnd() { isDragging = false; }
+</script>
+
+</body>
+</html>
